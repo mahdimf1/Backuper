@@ -1,0 +1,11 @@
+{
+  "server_id": "1752751150483",
+  "server_address": "v1.mf1vpn.xyz",
+  "backup_name": "backup_20250717_144933.tar.gz",
+  "backup_paths": [
+    "/var/lib/marzban",
+    "/opt/marzban/"
+  ],
+  "created_at": "2025-07-17T14:49:49.088740",
+  "size_bytes": 72
+}

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Server Backup Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-server"></i> Backup Manager</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="menu-item" data-section="servers">
+                    <i class="fas fa-server"></i>
+                    <span>Servers</span>
+                </li>
+                <li class="menu-item" data-section="backups">
+                    <i class="fas fa-archive"></i>
+                    <span>Backups</span>
+                </li>
+                <li class="menu-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <button class="btn btn-primary" id="addServerBtn">
+                    <i class="fas fa-plus"></i>
+                    Add Server
+                </button>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalServers">0</h3>
+                            <p>Total Servers</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="activeServers">0</h3>
+                            <p>Active Servers</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-archive"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalBackups">0</h3>
+                            <p>Total Backups</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="lastBackup">Never</h3>
+                            <p>Last Backup</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <p class="no-data">No recent activity</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Servers Section -->
+            <section id="servers" class="content-section">
+                <div class="servers-list" id="serversList">
+                    <p class="no-data">No servers configured. Click "Add Server" to get started.</p>
+                </div>
+            </section>
+
+            <!-- Backups Section -->
+            <section id="backups" class="content-section">
+                <div class="backups-list" id="backupsList">
+                    <p class="no-data">No backups available.</p>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="settings-panel">
+                    <h3>Backup Settings</h3>
+                    <div class="setting-item">
+                        <label for="backupInterval">Backup Interval (hours):</label>
+                        <input type="number" id="backupInterval" value="24" min="1">
+                    </div>
+                    <div class="setting-item">
+                        <label for="maxBackups">Maximum Backups to Keep:</label>
+                        <input type="number" id="maxBackups" value="7" min="1">
+                    </div>
+                    <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Server Modal -->
+    <div id="addServerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Server</h3>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addServerForm">
+                <div class="form-group">
+                    <label for="serverName">Server Name:</label>
+                    <input type="text" id="serverName" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverAddress">Server Address:</label>
+                    <input type="text" id="serverAddress" placeholder="192.168.1.100" required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="backupPaths">Backup Paths (one per line):</label>
+                    <textarea id="backupPaths" rows="4" placeholder="/home/user/documents\n/var/www/html\n/etc/nginx" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Server</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backup Progress Modal -->
+    <div id="backupProgressModal" class="modal">
+        <div class="modal-content backup-progress-modal">
+            <div class="modal-header">
+                <h3>Backup Progress</h3>
+                <button class="close-btn" id="closeProgressModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="backup-progress-content">
+                <div class="server-info-display">
+                    <h4 id="backupServerName">Server Name</h4>
+                    <p id="backupServerAddress">Server Address</p>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span>Overall Progress</span>
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Initializing...</div>
+                </div>
+
+                <div class="current-file-section">
+                    <div class="current-file-header">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Current File:</span>
+                    </div>
+                    <div class="current-file-name" id="currentFileName">Preparing...</div>
+                    <div class="file-progress-bar">
+                        <div class="file-progress-fill" id="fileProgressFill"></div>
+                    </div>
+                </div>
+
+                <div class="backup-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Elapsed Time:</span>
+                        <span id="elapsedTime">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-files-o"></i>
+                        <span>Files Processed:</span>
+                        <span id="filesProcessed">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-hdd-o"></i>
+                        <span>Data Size:</span>
+                        <span id="dataSize">0 MB</span>
+                    </div>
+                </div>
+
+                <div class="log-section">
+                    <div class="log-header">
+                        <i class="fas fa-list"></i>
+                        <span>Backup Log</span>
+                        <button class="btn btn-sm" id="clearLogBtn">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="log-container" id="logContainer">
+                        <!-- Log entries will be added here -->
+                    </div>
+                </div>
+
+                <div class="backup-actions">
+                    <button class="btn btn-danger" id="cancelBackupBtn" style="display: none;">
+                        <i class="fas fa-stop"></i>
+                        Cancel Backup
+                    </button>
+                    <button class="btn btn-success" id="completeBackupBtn" style="display: none;">
+                        <i class="fas fa-check"></i>
+                        Complete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
